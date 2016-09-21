@@ -67,7 +67,6 @@ def config(conf):
 
     if bad_conf:
         plugin_conf[BAD_CONFIG] = bad_conf
-        
 
 
 def _get_http_request(health_url):
@@ -109,28 +108,28 @@ def read():
         val = 1
         collectd.Values(plugin=PLUGIN_NAME,
                         type_instance='plugin.conf.error',
-                        plugin_instance=plugin_conf.get('BadConfig'),
+                        plugin_instance=plugin_conf.get(BAD_CONFIG),
                         type=TYPE,
                         values=[val]).dispatch()
 
         log('Invalid config keys found.  Will not collect metrics')
+        return
 
-    else:
-        if 'HEALTH_URL' in plugin_conf:
-            sval, hval = _get_health_status(plugin_conf)
+    if 'HEALTH_URL' in plugin_conf:
+        sval, hval = _get_health_status(plugin_conf)
 
-        if sval is not None and hval is not None:
-            collectd.Values(plugin=PLUGIN_NAME,
-                            type_instance='service.health.status',
-                            plugin_instance=plugin_conf.get('Instance'),
-                            type=TYPE,
-                            values=[sval]).dispatch()
+    if sval is not None and hval is not None:
+        collectd.Values(plugin=PLUGIN_NAME,
+                        type_instance='service.health.status',
+                        plugin_instance=plugin_conf.get('Instance'),
+                        type=TYPE,
+                        values=[sval]).dispatch()
 
-            collectd.Values(plugin=PLUGIN_NAME,
-                            type_instance='service.health.value',
-                            plugin_instance=plugin_conf.get('Instance'),
-                            type=TYPE,
-                            values=[hval]).dispatch()
+        collectd.Values(plugin=PLUGIN_NAME,
+                        type_instance='service.health.value',
+                        plugin_instance=plugin_conf.get('Instance'),
+                        type=TYPE,
+                        values=[hval]).dispatch()
 
 
 def init():
