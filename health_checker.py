@@ -38,7 +38,7 @@ def config(conf):
     required_keys = ('Instance', 'HEALTH_URL')
     json_keys = ('JSONKey', 'JSONVal')
     chk_json = False
-    bad_conf = ''
+    bad_conf = 0
 
     for val in conf.children:
         if val.key == 'HEALTH_URL':
@@ -52,38 +52,34 @@ def config(conf):
         elif val.key == 'Instance':
             plugin_conf[val.key] = val.values[0]
         else:
-            bad_conf = bad_conf + '_Unknown_config_key'
+            bad_conf = 1
             log('Unknown config key: %s' % val.key)
 
     for key in required_keys:
         if key not in plugin_conf:
-            bad_conf = bad_conf + '_Missing_req_key'
+            bad_conf = 1
             log('Missing required config setting: %s' % (key))
 
     if chk_json and \
        len(set(json_keys).intersection(plugin_conf.keys())) != len(json_keys):
-        bad_conf = bad_conf + '_Missing_json_key'
+        bad_conf = 1
         log('JSON must have both keys: %s' % (json_keys,))
 
     if bad_conf:
         plugin_conf[BAD_CONFIG] = bad_conf
 
 
-def _get_http_request(health_url):
-    try:
-        return requests.get(health_url)
-    except:
-        log('%s; %s is unreachable.' % (SICK_MSG, health_url))
-        return 0
-
-
 def _get_health_status(plugin_conf):
     status = 0
     val = 0
+    r = None
     health_url = plugin_conf.get('HEALTH_URL')
     json_key = plugin_conf.get('JSONKey')
     json_val = plugin_conf.get('JSONVal')
-    r = _get_http_request(health_url)
+    try:
+        r = requests.get(health_url)
+    except:
+        log('%s; %s is unreachable.' % (SICK_MSG, health_url))
     if r:
         status = r.status_code
         if status == 200:
@@ -96,8 +92,8 @@ def _get_health_status(plugin_conf):
                                                   r.json().get(json_key)))
                 except:
                     log('%s; could not read json' % (SICK_MSG))
-        else:
-            val = 1
+            else:
+                val = 1
     return status, val
 
 
@@ -108,7 +104,6 @@ def read():
         val = 1
         collectd.Values(plugin=PLUGIN_NAME,
                         type_instance='plugin.conf.error',
-                        plugin_instance=plugin_conf.get(BAD_CONFIG),
                         type=TYPE,
                         values=[val]).dispatch()
 
