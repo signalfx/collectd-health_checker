@@ -35,13 +35,15 @@ def log(param):
 
 def config(conf):
     global plugin_conf
-    required_keys = ('Instance', 'HEALTH_URL')
+    required_keys = ('Instance', 'URL')
     json_keys = ('JSONKey', 'JSONVal')
     chk_json = False
     bad_conf = 0
 
     for val in conf.children:
         if val.key == 'HEALTH_URL':
+            plugin_conf['URL'] = val.values[0]
+        elif val.key == 'URL':
             plugin_conf[val.key] = val.values[0]
         elif val.key == 'JSONKey':
             plugin_conf[val.key] = val.values[0]
@@ -73,7 +75,7 @@ def _get_health_status(plugin_conf):
     status = 0
     val = 0
     r = None
-    health_url = plugin_conf.get('HEALTH_URL')
+    health_url = plugin_conf.get('URL')
     json_key = plugin_conf.get('JSONKey')
     json_val = plugin_conf.get('JSONVal')
     try:
@@ -110,7 +112,7 @@ def read():
         log('Invalid config keys found.  Will not collect metrics')
         return
 
-    if 'HEALTH_URL' in plugin_conf:
+    if 'URL' in plugin_conf:
         sval, hval = _get_health_status(plugin_conf)
 
     if sval is not None and hval is not None:
