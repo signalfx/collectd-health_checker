@@ -11,6 +11,8 @@
 # checks from SignalFx's Nagios configuration
 
 import requests
+import sys
+import time
 
 try:
     import collectd
@@ -79,7 +81,7 @@ def _get_health_status(plugin_conf):
     json_key = plugin_conf.get('JSONKey')
     json_val = plugin_conf.get('JSONVal')
     try:
-        r = requests.get(health_url)
+        r = requests.get(health_url, timeout=5)
     except:
         log('%s; %s is unreachable.' % (SICK_MSG, health_url))
     if r:
@@ -135,6 +137,7 @@ def init():
 
 def shutdown():
     log('Plugin %s shutting down...' % PLUGIN_NAME)
+
 
 if __name__ != '__main__':
     # when running inside plugin register each callback
