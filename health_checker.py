@@ -25,6 +25,8 @@ TYPE = 'gauge'
 SICK_MSG = 'Service is not healthy'
 MISSING_JSON_MSG = 'All JSON keys not present.  Will not collect metrics'
 BAD_CONFIG = 'BadConfig'
+STATUS = 0
+VAL = 0
 
 plugin_conf = {}
 
@@ -40,23 +42,20 @@ def config(conf):
     global plugin_conf
     required_keys = ('Instance', 'URL')
     json_keys = ('JSONKey', 'JSONVal')
+    asis_keys = ('URL', 'TCP', 'Instance')
     chk_json = False
     bad_conf = 0
 
     for val in conf.children:
         if val.key == 'HEALTH_URL':
             plugin_conf['URL'] = val.values[0]
-        elif val.key == 'URL':
-            plugin_conf[val.key] = val.values[0]
         elif val.key == 'JSONKey':
             plugin_conf[val.key] = val.values[0]
             chk_json = True
         elif val.key == 'JSONVal':
             plugin_conf[val.key] = val.values[0]
             chk_json = True
-        elif val.key == 'TCP':
-            plugin_conf[val.key] = val.values[0]
-        elif val.key == 'Instance':
+        elif val.key in asis_keys:
             plugin_conf[val.key] = val.values[0]
         else:
             bad_conf = 1
@@ -77,8 +76,8 @@ def config(conf):
 
 
 def _get_tcp_response(plugin_conf):
-    status = 0
-    val = 0
+    status = STATUS
+    val = VAL
     port = plugin_conf.get('TCP')
     url = plugin_conf.get('URL')
     s = socket.socket()
@@ -92,8 +91,8 @@ def _get_tcp_response(plugin_conf):
 
 
 def _get_http_status(plugin_conf):
-    status = 0
-    val = 0
+    status = STATUS
+    val = VAL
     r = None
     health_url = plugin_conf.get('URL')
     json_key = plugin_conf.get('JSONKey')
