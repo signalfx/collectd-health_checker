@@ -11,6 +11,7 @@
 # checks from SignalFx's Nagios configuration
 
 import requests
+import socket
 import sys
 import time
 
@@ -53,6 +54,8 @@ def config(conf):
         elif val.key == 'JSONVal':
             plugin_conf[val.key] = val.values[0]
             chk_json = True
+        elif val.key == 'TCP':
+            plugin_conf[val.key] = val.values[0]
         elif val.key == 'Instance':
             plugin_conf[val.key] = val.values[0]
         else:
@@ -73,7 +76,22 @@ def config(conf):
         plugin_conf[BAD_CONFIG] = bad_conf
 
 
-def _get_health_status(plugin_conf):
+def _get_tcp_response(plugin_conf):
+    status = 0
+    val = 0
+    port = plugin_conf.get('TCP')
+    url = plugin_conf.get('URL')
+    s = socket.socket()
+    try:
+        s.connect((url, port))
+        status = 200
+        val = 1
+    except socket.error, e:
+        log('%s: reporting %s' % (SICK_MSG, e))
+    return status, val
+
+
+def _get_http_status(plugin_conf):
     status = 0
     val = 0
     r = None
@@ -98,6 +116,14 @@ def _get_health_status(plugin_conf):
                     log('%s; could not read json' % (SICK_MSG))
             else:
                 val = 1
+    return status, val
+
+
+def _get_health_status(plugin_conf):
+    if 'TCP' in plugin_conf:
+        status, val = _get_tcp_response(plugin_conf)
+    else:
+        status, val = _get_http_status(plugin_conf)
     return status, val
 
 
