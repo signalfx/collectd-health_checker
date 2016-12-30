@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # This plugin is intended to be a very basic health checker for any
 # type of system that can be queried via http. Right now it just does
 # an http response check and parses json.  If the value for a given
@@ -25,6 +24,11 @@ TYPE = 'gauge'
 SICK_MSG = 'Service is not healthy'
 MISSING_JSON_MSG = 'All JSON keys not present.  Will not collect metrics'
 BAD_CONFIG = 'BadConfig'
+URL = 'URL'
+TCP = 'TCP'
+JSONKEY = 'JSONKey'
+JSONVAL = 'JSONVal'
+INSTANCE = 'Instance'
 STATUS = 0
 VAL = 0
 
@@ -40,19 +44,16 @@ def log(param):
 
 def config(conf):
     global plugin_conf
-    required_keys = ('Instance', 'URL')
-    json_keys = ('JSONKey', 'JSONVal')
-    asis_keys = ('URL', 'TCP', 'Instance')
+    required_keys = (INSTANCE, URL)
+    json_keys = (JSONKEY, JSONVAL)
+    asis_keys = (URL, TCP, INSTANCE)
     chk_json = False
     bad_conf = 0
 
     for val in conf.children:
         if val.key == 'HEALTH_URL':
-            plugin_conf['URL'] = val.values[0]
-        elif val.key == 'JSONKey':
-            plugin_conf[val.key] = val.values[0]
-            chk_json = True
-        elif val.key == 'JSONVal':
+            plugin_conf[URL] = val.values[0]
+        elif val.key in json_keys:
             plugin_conf[val.key] = val.values[0]
             chk_json = True
         elif val.key in asis_keys:
@@ -78,8 +79,8 @@ def config(conf):
 def _get_tcp_response(plugin_conf):
     status = STATUS
     val = VAL
-    port = plugin_conf.get('TCP')
-    url = plugin_conf.get('URL')
+    port = plugin_conf.get(TCP)
+    url = plugin_conf.get(URL)
     s = socket.socket()
     try:
         s.connect((url, port))
@@ -94,9 +95,9 @@ def _get_http_status(plugin_conf):
     status = STATUS
     val = VAL
     r = None
-    health_url = plugin_conf.get('URL')
-    json_key = plugin_conf.get('JSONKey')
-    json_val = plugin_conf.get('JSONVal')
+    health_url = plugin_conf.get(URL)
+    json_key = plugin_conf.get(JSONKEY)
+    json_val = plugin_conf.get(JSONVAL)
     try:
         r = requests.get(health_url, timeout=5)
     except:
