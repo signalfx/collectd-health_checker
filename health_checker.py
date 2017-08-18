@@ -33,8 +33,6 @@ SKIP_SECURITY = 'SkipSecurity'
 STATUS = 0
 VAL = 0
 
-plugin_conf = {}
-
 
 def log(param):
     if __name__ != '__main__':
@@ -44,7 +42,7 @@ def log(param):
 
 
 def config(conf):
-    global plugin_conf
+    plugin_conf = {}
     required_keys = (INSTANCE, URL)
     json_keys = (JSONKEY, JSONVAL)
     asis_keys = (URL, TCP, INSTANCE, SKIP_SECURITY)
@@ -60,21 +58,23 @@ def config(conf):
         elif val.key in asis_keys:
             plugin_conf[val.key] = val.values[0]
         else:
-            bad_conf = 1
             log('Unknown config key: %s' % val.key)
+            plugin_conf[BAD_CONFIG] = 1
 
     for key in required_keys:
         if key not in plugin_conf:
-            bad_conf = 1
             log('Missing required config setting: %s' % (key))
+            plugin_conf[BAD_CONFIG] = 1
 
     if chk_json and \
-       len(set(json_keys).intersection(plugin_conf.keys())) != len(json_keys):
-        bad_conf = 1
+        len(set(json_keys).intersection(plugin_conf.keys())) != len(json_keys):
         log('JSON must have both keys: %s' % (json_keys,))
+        plugin_conf[BAD_CONFIG] = 1
 
-    if bad_conf:
-        plugin_conf[BAD_CONFIG] = bad_conf
+    collectd.register_read(read,
+                           data=plugin_conf,
+                           name="health_checker-%s-%s" % (plugin_conf[URL],
+                                                          plugin_conf[INSTANCE]))
 
 
 def _get_tcp_response(plugin_conf):
@@ -132,7 +132,7 @@ def _get_health_status(plugin_conf):
     return status, val
 
 
-def read():
+def read(plugin_conf):
     sval = None
     hval = None
     if BAD_CONFIG in plugin_conf:
@@ -174,7 +174,6 @@ if __name__ != '__main__':
     # when running inside plugin register each callback
     collectd.register_init(init)
     collectd.register_config(config)
-    collectd.register_read(read)
     collectd.register_shutdown(shutdown)
 else:
     # outside plugin just collect the info
