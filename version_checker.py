@@ -38,6 +38,7 @@ def read():
     release = popen(["uname", "-r"])
     docker = popen(["rpm", "-q", "docker"])
     installed = popen(["rpm", "-q", "kernel"])
+    installed = installed.split("\n")[-1]
 
     collectd.Values(plugin=PLUGIN_NAME,
                     type_instance=TYPE_INSTANCE,
