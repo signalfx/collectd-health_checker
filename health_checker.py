@@ -29,6 +29,7 @@ TCP = 'TCP'
 JSONKEY = 'JSONKey'
 JSONVAL = 'JSONVal'
 INSTANCE = 'Instance'
+SKIP_SECURITY = 'SkipSecurity'
 STATUS = 0
 VAL = 0
 
@@ -46,7 +47,7 @@ def config(conf):
     global plugin_conf
     required_keys = (INSTANCE, URL)
     json_keys = (JSONKEY, JSONVAL)
-    asis_keys = (URL, TCP, INSTANCE)
+    asis_keys = (URL, TCP, INSTANCE, SKIP_SECURITY)
     chk_json = False
     bad_conf = 0
 
@@ -98,8 +99,12 @@ def _get_http_status(plugin_conf):
     health_url = plugin_conf.get(URL)
     json_key = plugin_conf.get(JSONKEY)
     json_val = plugin_conf.get(JSONVAL)
+    skip_security = plugin_conf.get(SKIP_SECURITY)
     try:
-        r = requests.get(health_url, timeout=5)
+        if skip_security:
+            r = requests.get(health_url, timeout=5, verify=False)
+        else:
+            r = requests.get(health_url, timeout=5)
     except:
         log('%s; %s is unreachable.' % (SICK_MSG, health_url))
     if r:
