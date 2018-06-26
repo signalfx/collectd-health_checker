@@ -84,7 +84,7 @@ def _get_tcp_response(plugin_conf):
     url = plugin_conf.get(URL)
     s = socket.socket()
     try:
-        s.connect((url, port))
+        s.connect((url, int(port)))
         status = 200
         val = 1
     except socket.error, e:
