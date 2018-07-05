@@ -25,7 +25,7 @@ PLUGIN_INSTANCE = "example[docker=%s,running=kernel-%s,installed=%s]"
 
 def popen(command):
     """ using subprocess instead of check_output for 2.6 comparability """
-    output = subprocess.Popen(command, stdout=subprocess.PIPE).communicate()[0]
+    output = subprocess.Popen(command, stdout=subprocess.PIPE, env={}).communicate()[0]
     return output.strip()
 
 def read():
