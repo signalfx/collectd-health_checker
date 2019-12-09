@@ -67,7 +67,7 @@ def config(conf):
             plugin_conf[BAD_CONFIG] = 1
 
     if chk_json and \
-        len(set(json_keys).intersection(plugin_conf.keys())) != len(json_keys):
+        len(set(json_keys).intersection(list(plugin_conf.keys()))) != len(json_keys):
         log('JSON must have both keys: %s' % (json_keys,))
         plugin_conf[BAD_CONFIG] = 1
 
@@ -87,7 +87,7 @@ def _get_tcp_response(plugin_conf):
         s.connect((url, int(port)))
         status = 200
         val = 1
-    except socket.error, e:
+    except socket.error as e:
         log('%s: reporting %s' % (SICK_MSG, e))
     return status, val
 
