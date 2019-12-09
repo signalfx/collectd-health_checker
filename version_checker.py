@@ -8,7 +8,7 @@ class Dispatch:
 
 class DummyCollectd:
     def Values(self, plugin=None, type_instance=None, plugin_instance=None, type=None, values=None):
-        print plugin, type_instance, plugin_instance, type, values
+        print(plugin, type_instance, plugin_instance, type, values)
         return Dispatch()
 
 try:
